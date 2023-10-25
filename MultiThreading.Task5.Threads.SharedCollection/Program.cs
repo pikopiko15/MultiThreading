@@ -20,6 +20,7 @@ namespace MultiThreading.Task5.Threads.SharedCollection
             Console.WriteLine();
 
             // feel free to add your code
+            int elements = 10;
             List<int> sharedCollection = new List<int>();
 
             Semaphore writeConcurrentOperation = new Semaphore(0, 1);
@@ -29,7 +30,7 @@ namespace MultiThreading.Task5.Threads.SharedCollection
 
             Thread writeToCollection = new Thread(() =>
             {
-                for (int i = 1; i <= 100; i++)
+                for (int i = 1; i <= elements; i++)
                 {
                     writeConcurrentOperation.WaitOne();
                     sharedCollection.Add(i);
@@ -39,7 +40,7 @@ namespace MultiThreading.Task5.Threads.SharedCollection
 
             Thread readFromCollection = new Thread((arg) =>
             {
-                for (int i = 1; i <= 100; i++)
+                while(sharedCollection.Count <= elements)
                 {
                     readConcurrentOperation.WaitOne();
                     Console.WriteLine("[" + string.Join(", ", sharedCollection) + "]");
