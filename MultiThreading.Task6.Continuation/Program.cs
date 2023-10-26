@@ -7,6 +7,8 @@
    Demonstrate the work of the each case with console utility.
 */
 using System;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace MultiThreading.Task6.Continuation
 {
@@ -23,8 +25,38 @@ namespace MultiThreading.Task6.Continuation
             Console.WriteLine();
 
             // feel free to add your code
+            Continuation();
 
             Console.ReadLine();
+        }
+
+        static async Task Continuation()
+        {
+            Task parentTaskA = Task.Run(() => Console.WriteLine("Parent Task A"))
+                .ContinueWith((prevTask) => Console.WriteLine("Continuation Task A"));
+
+            Task parentTaskB = Task.Run(() => throw new Exception("Parent Task B"))
+                .ContinueWith((prevTask) => Console.WriteLine("Continuation Task B"), TaskContinuationOptions.OnlyOnFaulted);
+
+            Task parentTaskC = Task.Run(() => throw new Exception("Parent Task C"))
+                .ContinueWith((prevTask) => Console.WriteLine("Continuation Task C"), TaskContinuationOptions.ExecuteSynchronously);
+
+            var cts = new CancellationTokenSource();
+            Task parentTaskD = Task.Run(() =>
+            {
+                cts.Cancel();
+            });
+
+            Task continuationTaskD = parentTaskD.ContinueWith((prevTask) => Console.WriteLine("Continuation Task D"), TaskContinuationOptions.LongRunning);
+
+            try
+            {
+                await Task.WhenAll(parentTaskA, parentTaskB, parentTaskC, parentTaskD);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception: {ex.Message}");
+            }
         }
     }
 }
