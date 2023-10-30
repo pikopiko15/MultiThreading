@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MultiThreading.Task3.MatrixMultiplier.Matrices;
 using MultiThreading.Task3.MatrixMultiplier.Multipliers;
@@ -20,9 +21,44 @@ namespace MultiThreading.Task3.MatrixMultiplier.Tests
         {
             // todo: implement a test method to check the size of the matrix which makes parallel multiplication more effective than
             // todo: the regular one
+            int minMatrixSize = 100; // Minimum matrix size to start testing
+            int maxMatrixSize = 1000; // Maximum matrix size for testing
+            int stepSize = 100; // Step size for increasing the matrix size
+
+            long regularMultiplicationTime = 0;
+            long parallelMultiplicationTime = 0;
+            int matrixSize = 0;
+
+            for (matrixSize = minMatrixSize; matrixSize <= maxMatrixSize; matrixSize += stepSize)
+            {
+                var matrixA = new Matrix(matrixSize, matrixSize, true);
+                var matrixB = new Matrix(matrixSize, matrixSize, true);
+
+                var regularMultiplier = new MatricesMultiplier();
+                var parallelMultiplier = new MatricesMultiplierParallel();
+
+                regularMultiplicationTime = MeasureMatrixMultiplicationTime(() => regularMultiplier.Multiply(matrixA, matrixB));
+                parallelMultiplicationTime = MeasureMatrixMultiplicationTime(() => parallelMultiplier.Multiply(matrixA, matrixB));
+
+                if(parallelMultiplicationTime < regularMultiplicationTime)
+                {
+                    break; 
+                }
+            }
+
+            Assert.IsTrue(parallelMultiplicationTime < regularMultiplicationTime, $"Matrix size when parallel is effective: {matrixSize}");
         }
 
         #region private methods
+
+        static long MeasureMatrixMultiplicationTime(Action action)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            action.Invoke();
+            stopwatch.Stop();
+            return stopwatch.ElapsedMilliseconds;
+        }
 
         void TestMatrix3On3(IMatricesMultiplier matrixMultiplier)
         {
